@@ -1,51 +1,198 @@
 # ESP32 BLE Mouse
 
-Biblioteca BLE Mouse para ESP32 (fork/fix do projeto original). Permite expor o ESP32 como um dispositivo apontador (mouse) via Bluetooth Low Energy.
+A library that allows an ESP32 to function as a Bluetooth Low Energy (BLE) Human Interface Device (HID) mouse.
 
-## Recursos
-- Emulação de movimentos X/Y
-- Scroll (roda)
-- Cliques (esquerdo, direito, meio)
-- Exemplo de uso pronto para Arduino/ESP32
+## Overview
 
-## Requisitos
-- ESP32 compatível com NimBLE
-- Arduino IDE ou plataforma equivalente com suporte ao ESP32
-- Biblioteca NimBLE (geralmente incluída no core ESP32)
+This library enables the ESP32 to emulate a wireless mouse using BLE. It is suitable for building custom input devices, automation tools, and assistive hardware.
 
-## Instalação
-1. Copie a pasta da biblioteca para `Documents/Arduino/libraries/` ou instale via gerenciador de bibliotecas se publicada.
-2. Abra o exemplo desejado em Arduino IDE e faça o upload para seu ESP32.
+The implementation is based on BLE HID reports and handles advertising, pairing, and communication with host devices such as computers and smartphones.
 
-## Uso rápido
-Exemplo mínimo:
-- Inicialize a biblioteca com um nome e fabricante:
-  - `BleMouse mouse("ESP32 FULL TEST", "ESP32", 100);`
-- No `setup()` chame:
-  - `mouse.begin();`
-- No `loop()` verifique conexão e faça movimentos ou cliques:
-  - `if (mouse.isConnected()) { mouse.move(50,0); mouse.click(1); }`
+## Features
 
-Veja exemplos completos em `exemples/` (português) incluídos no repositório.
+* BLE HID mouse implementation
+* Cursor movement (X, Y axes)
+* Vertical and horizontal scrolling
+* Mouse button support (left, right, middle)
+* Custom device name and manufacturer
+* Connection status handling
 
-## API principal
-- [`BleMouse::BleMouse`](BleMouse.h) — construtor (nome do dispositivo, fabricante, nível da bateria).
-- [`BleMouse::begin`](BleMouse.h) — inicializa o serviço HID e começa a anunciar.
-- [`BleMouse::isConnected`](BleMouse.h) — retorna true se houver cliente BLE conectado.
-- [`BleMouse::move`](BleMouse.h) — move o cursor: `move(int8_t x, int8_t y, int8_t wheel = 0)`.
-- [`BleMouse::click`](BleMouse.h) — envia clique: `click(uint8_t b = 1)`.
+## Use Cases
 
-(Implementação em [`BleMouse.cpp`](BleMouse.cpp))
+* Custom wireless mouse hardware
+* Macro and automation devices
+* Presentation controllers
+* Assistive technology interfaces
+* Remote control systems
 
-## Exemplos incluídos
-- [exemples/mouse_movimento_e_click_fix/mouse_movimento_e_click_fix.ino](exemples/mouse_movimento_e_click_fix/mouse_movimento_e_click_fix.ino) — versão alternativa/ajustada.
+## Limitations
 
-## Metadados da biblioteca
-Configuração e versão estão em [`library.properties`](library.properties).
+* BLE HID support may be unstable on some macOS and iOS devices
+* Not suitable for high-frequency or low-latency input requirements
+* BLE stack uses significant ESP32 memory
+* Limited control over connection parameters (depends on BLE stack)
 
-## Notas
-- O HID report map e aparência são configurados para que o dispositivo seja reconhecido como mouse.
-- Em alguns PCs pode ser necessário aguardar um pequeno delay no evento de conexão.
-- Existe a posibilidade de não funcionar devido ao bitmap.
+## Installation
 
-Contribuições e issues são bem-vindas. Utilize o repositório original como referência: https://github.com/ratotsu/ESP32-BLE-Mouse
+### Arduino IDE
+
+1. Download the repository as a ZIP file
+2. Open Arduino IDE
+3. Go to Sketch → Include Library → Add .ZIP Library
+4. Select the downloaded file
+
+### PlatformIO
+
+Add the following to your `platformio.ini`:
+
+```
+lib_deps =
+  T-vK/ESP32-BLE-Mouse
+```
+
+### Manual Installation
+
+Clone the repository into your Arduino libraries folder:
+
+```
+git clone https://github.com/T-vK/ESP32-BLE-Mouse.git
+```
+
+## Quick Start
+
+```cpp
+#include <BleMouse.h>
+
+BleMouse bleMouse("ESP32 Mouse");
+
+void setup() {
+  bleMouse.begin();
+}
+
+void loop() {
+  if (bleMouse.isConnected()) {
+    bleMouse.move(50, 0);
+    delay(1000);
+    bleMouse.move(-50, 0);
+    delay(1000);
+  }
+}
+```
+
+## How It Works
+
+The ESP32 operates as a BLE peripheral device implementing the HID profile.
+
+Flow:
+
+ESP32 → BLE Peripheral → Host Device (PC / Smartphone)
+
+The library manages:
+
+* BLE advertising
+* Pairing and bonding
+* HID report descriptors
+* Input report transmission
+
+The host interprets the ESP32 as a standard mouse device.
+
+## Core API
+
+### Initialization
+
+* `begin()`
+  Initializes BLE services and starts advertising
+
+* `end()`
+  Stops BLE services
+
+### Connection
+
+* `isConnected()`
+  Returns true if a device is connected
+
+### Mouse Control
+
+* `move(x, y, wheel = 0, hWheel = 0)`
+  Moves cursor and handles scroll
+
+* `click(button)`
+  Press and release button
+
+* `press(button)`
+  Press and hold button
+
+* `release(button)`
+  Release button
+
+* `isPressed(button)`
+  Check if button is pressed
+
+## Internal Architecture (Based on Source Code)
+
+The `BleMouse` class encapsulates BLE HID functionality using:
+
+* `NimBLEDevice` for BLE stack initialization
+* `NimBLEServer` for device hosting
+* `NimBLEHIDDevice` for HID profile handling
+* HID report descriptor defining mouse behavior
+
+Key internal responsibilities:
+
+* Creating HID descriptor for mouse reports
+* Managing BLE server lifecycle
+* Sending input reports via characteristic updates
+* Tracking button states and connection status
+
+The library abstracts BLE complexity but still depends heavily on ESP32 BLE memory configuration.
+
+## Performance Considerations
+
+* BLE communication introduces latency compared to wired input
+* Frequent `move()` calls can increase CPU usage and BLE traffic
+* Use delays or rate limiting when sending continuous input
+* Ensure proper power supply for stable BLE operation
+
+## Troubleshooting
+
+### Device not connecting
+
+* Ensure Bluetooth is enabled on the host
+* Restart Bluetooth on the host device
+* Reset the ESP32
+
+### ESP32 resets or crashes
+
+* Use a partition scheme with more memory (e.g., "Minimal SPIFFS")
+* Avoid running other memory-heavy libraries
+
+### Input not working correctly
+
+* Check if device is actually connected (`isConnected()`)
+* Ensure host recognizes device as HID mouse
+
+### Issues on macOS or iOS
+
+* BLE HID support varies by device and OS version
+* Some devices may fail to pair or behave inconsistently
+
+## Compatibility
+
+Tested with:
+
+* Windows
+* Linux
+* Android
+
+Limited or unstable support:
+
+* macOS
+* iOS
+
+## Contributing
+
+Contributions are welcome. Please open issues or submit pull requests.
+
+## License
+
+This project is licensed under the MIT License.
