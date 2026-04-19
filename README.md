@@ -1,15 +1,20 @@
+<!-- Biblioteca ESP32 BLE Mouse: permite ao ESP32 funcionar como mouse BLE HID -->
+
 # ESP32 BLE Mouse
 
+<!-- Descrição: Biblioteca para transformar ESP32 em mouse sem fio via BLE -->
 A library that allows an ESP32 to function as a Bluetooth Low Energy (BLE) Human Interface Device (HID) mouse.
 
 ## Overview
 
+<!-- Visão geral: Implementa mouse sem fio usando BLE, ideal para dispositivos customizados -->
 This library enables the ESP32 to emulate a wireless mouse using BLE. It is suitable for building custom input devices, automation tools, and assistive hardware.
 
 The implementation is based on BLE HID reports and handles advertising, pairing, and communication with host devices such as computers and smartphones.
 
 ## Features
 
+<!-- Funcionalidades: Lista recursos suportados -->
 * BLE HID mouse implementation
 * Cursor movement (X, Y axes)
 * Vertical and horizontal scrolling
@@ -19,6 +24,7 @@ The implementation is based on BLE HID reports and handles advertising, pairing,
 
 ## Use Cases
 
+<!-- Casos de uso: Aplicações possíveis -->
 * Custom wireless mouse hardware
 * Macro and automation devices
 * Presentation controllers
@@ -27,12 +33,15 @@ The implementation is based on BLE HID reports and handles advertising, pairing,
 
 ## Limitations
 
+<!-- Limitações: Restrições conhecidas -->
 * BLE HID support may be unstable on some macOS and iOS devices
 * Not suitable for high-frequency or low-latency input requirements
 * BLE stack uses significant ESP32 memory
 * Limited control over connection parameters (depends on BLE stack)
 
 ## Installation
+
+<!-- Instalação: Como instalar no Arduino IDE e PlatformIO -->
 
 ### Arduino IDE
 
