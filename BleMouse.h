@@ -14,19 +14,19 @@ public:
     BleMouse(std::string deviceName = "ESP32 Mouse",
              std::string manufacturer = "ESP32",
              uint8_t batteryLevel = 100);
+    ~BleMouse();
 
     void begin();
     void move(int8_t x, int8_t y, int8_t wheel = 0);
     void click(uint8_t b = 1);
-
     bool isConnected();
 
 private:
     NimBLEServer* pServer;
     NimBLEHIDDevice* hid;
     NimBLECharacteristic* inputMouse;
+    bool initialized;
 
-    // ✔️ ADICIONE ISSO
     std::string deviceName;
     std::string manufacturer;
     uint8_t batteryLevel;

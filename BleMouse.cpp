@@ -40,7 +40,7 @@ static const uint8_t reportMap[] = {
 
 class ServerCallbacks : public NimBLEServerCallbacks {
     void onConnect(NimBLEServer* pServer) override {
-        delay(500); // necessário para alguns PCs
+        // Evita delay - bloqueia BLE stack
     }
 
     void onDisconnect(NimBLEServer* pServer) override {
@@ -50,12 +50,24 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 
 BleMouse::BleMouse(std::string deviceName, std::string manufacturer, uint8_t batteryLevel) {
     this->deviceName = deviceName;
-    this-> manufacturer = manufacturer;
-    this-> batteryLevel = batteryLevel;
+    this->manufacturer = manufacturer;
+    this->batteryLevel = batteryLevel;
+    this->pServer = nullptr;
+    this->hid = nullptr;
+    this->inputMouse = nullptr;
+    this->initialized = false;
+}
+
+BleMouse::~BleMouse() {
+    pServer = nullptr;
+    hid = nullptr;
+    inputMouse = nullptr;
 }
 
 
 void BleMouse::begin() {
+    if (initialized) return;
+    
     NimBLEDevice::init(deviceName);
     NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
@@ -66,26 +78,20 @@ void BleMouse::begin() {
     inputMouse = hid->inputReport(1);
 
     hid->manufacturer()->setValue(manufacturer);
-
     hid->pnp(0x02, 0xe502, 0xa111, 0x0210);
     hid->hidInfo(0x00, 0x01);
-
     hid->reportMap((uint8_t*)reportMap, sizeof(reportMap));
     hid->startServices();
 
     NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
     advertising->addServiceUUID(hid->hidService()->getUUID());
-
-    // ESSENCIAL para aparecer como mouse
     advertising->setAppearance(0x03C2);
-
     advertising->setScanResponse(true);
-    //advertising->setName("ESP32 Mouse");
-
     advertising->setMinPreferred(0x06);
     advertising->setMaxPreferred(0x12);
-
     advertising->start();
+    
+    initialized = true;
 }
 
 bool BleMouse::isConnected() {
@@ -97,26 +103,18 @@ void BleMouse::move(int8_t x, int8_t y, int8_t wheel) {
 
     uint8_t m[4];
     m[0] = 0x00;
-    m[1] = x;
-    m[2] = y;
-    m[3] = wheel;
+    m[1] =nitialized || !isConnected() || !inputMouse) return;
 
+    uint8_t m[4] = {0x00, x, y, wheel};
     inputMouse->setValue(m, 4);
-    inputMouse->notify();
-
-    delay(10);
-}
-void BleMouse::click(uint8_t b) {
-    if (!isConnected()) return;
-
+    inputMouse->notify(
     // PRESS
     uint8_t press[4] = {b, 0, 0, 0};
     inputMouse->setValue(press, 4);
     inputMouse->notify();
     delay(10);
+nitialized || !isConnected() || !inputMouse) return;
 
-    // RELEASE (zera tudo explicitamente)
-    uint8_t release[4] = {0, 0, 0, 0};
-    inputMouse->setValue(release, 4);
+    uint8_t press[4] = {b, 0, 0, 0};
+    inputMouse->setValue(press, 4);
     inputMouse->notify();
-}
